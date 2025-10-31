@@ -1,13 +1,14 @@
 # Delirium - Zero-Knowledge Paste System
 # Makefile for local development and deployment
 
-.PHONY: help start stop restart logs dev clean test build-client health-check quick-start
+.PHONY: help setup start stop restart logs dev clean test build-client health-check quick-start
 
 # Default target
 help:
 	@echo "Delirium - Zero-Knowledge Paste System"
 	@echo ""
 	@echo "Available commands:"
+	@echo "  make setup         - 🔐 Interactive setup wizard (configure secrets)"
 	@echo "  make start         - Start everything (build client + docker compose up)"
 	@echo "  make stop          - Stop all containers"
 	@echo "  make restart       - Restart services"
@@ -25,6 +26,12 @@ help:
 	@echo "  make monitor       - Start service monitoring"
 	@echo "  make backup        - Create data backup"
 	@echo ""
+
+# Interactive setup wizard
+setup:
+	@echo "🔐 Starting interactive setup wizard..."
+	@chmod +x scripts/setup.sh
+	./scripts/setup.sh
 
 # Start everything
 start: build-client
