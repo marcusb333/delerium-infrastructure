@@ -1,7 +1,7 @@
 # Delirium - Zero-Knowledge Paste System
 # Makefile for local development and deployment
 
-.PHONY: help setup start stop restart logs dev clean test build-client health-check quick-start
+.PHONY: help setup start stop restart logs dev clean test build-client build-server health-check quick-start deploy-full
 
 # Default target
 help:
@@ -25,6 +25,7 @@ help:
 	@echo "  make security-check - Run security verification"
 	@echo "  make monitor       - Start service monitoring"
 	@echo "  make backup        - Create data backup"
+	@echo "  make deploy-full   - Full pipeline: clean, build, test, and deploy"
 	@echo ""
 
 # Interactive setup wizard
@@ -128,3 +129,34 @@ backup:
 	@echo "💾 Creating backup..."
 	@chmod +x scripts/backup.sh
 	./scripts/backup.sh
+
+# Full pipeline: clean, build, test, and deploy
+deploy-full:
+	@echo "=========================================="
+	@echo "🚀 Full Pipeline: Clean, Build, Test & Deploy"
+	@echo "=========================================="
+	@echo ""
+	@echo "🧹 Step 1/5: Cleaning..."
+	@$(MAKE) clean
+	@echo ""
+	@echo "📦 Step 2/5: Building client..."
+	@cd client && npm run build
+	@echo ""
+	@echo "🏗️  Step 3/5: Building server..."
+	@cd server && ./gradlew clean build
+	@echo ""
+	@echo "🧪 Step 4/5: Running tests..."
+	@echo "  → Client tests..."
+	@cd client && npm test || (echo "⚠️  Client tests failed!" && exit 1)
+	@echo "  → Server tests..."
+	@cd server && ./gradlew test || (echo "⚠️  Server tests failed!" && exit 1)
+	@echo ""
+	@echo "🐳 Step 5/5: Deploying to Docker..."
+	@docker compose down
+	@docker compose up -d
+	@echo ""
+	@echo "=========================================="
+	@echo "✅ Full pipeline completed successfully!"
+	@echo "=========================================="
+	@echo "🌐 Access at http://localhost:8080"
+	@echo "📊 Check logs: make logs"
