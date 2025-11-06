@@ -3,11 +3,12 @@ set -e
 
 # VPS Deployment Script for Delirium
 # This script sets up Delirium on a fresh VPS with SSL support
-# Usage: ./scripts/vps-deploy.sh YOUR_DOMAIN YOUR_EMAIL
+# Usage: ./scripts/vps-deploy.sh YOUR_DOMAIN YOUR_EMAIL GIT_USERNAME
 
 DOMAIN=${1:-}
 EMAIL=${2:-}
-REPO_URL="https://github.com/your-username/delerium-paste.git"
+GIT_USERNAME=${3:-}
+REPO_URL="https://github.com/$GIT_USERNAME/delerium-paste.git"
 INSTALL_DIR="$HOME/delirium"
 
 # Colors for output
@@ -29,7 +30,7 @@ echo_error() {
 }
 
 # Check if running as root
-if [ "$EUID" -eq 0 ]; then 
+if [ "$EUID" -eq 0 ]; then
     echo_error "Please do not run this script as root (use regular user with sudo access)"
     exit 1
 fi
@@ -46,6 +47,13 @@ if [ -z "$EMAIL" ]; then
     echo_error "Email address is required for Let's Encrypt"
     echo "Usage: $0 YOUR_DOMAIN YOUR_EMAIL"
     echo "Example: $0 example.com admin@example.com"
+    exit 1
+fi
+
+if [ -z "$GIT_USERNAME" ]; then
+    echo_error "Username is required for git clone"
+    echo "Usage: $0 YOUR_DOMAIN YOUR_EMAIL GIT_USERNAME"
+    echo "Example: $0 example.com admin@example.com GIT_USERNAME"
     exit 1
 fi
 
@@ -222,4 +230,3 @@ echo_info "  2. Check logs to ensure no errors"
 echo_info "  3. Set up backups (see docs/DEPLOYMENT.md)"
 echo ""
 echo_info "================================================"
-
