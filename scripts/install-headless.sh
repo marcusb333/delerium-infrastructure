@@ -17,7 +17,7 @@ fi
 # Or copy this file to the server and run: bash install-headless.sh [/custom/path]
 
 REPO_URL="https://github.com/your-username/delerium-paste.git"
-TAG="v0.1.2-alpha"
+TAG="v0.1.6-alpha"
 # Install directory (env APP_DIR or first arg, defaults to /opt/delirium)
 APP_DIR="${APP_DIR:-${1:-/opt/delirium}}"
 
