@@ -138,6 +138,7 @@ backup:
 	./scripts/backup.sh
 
 # Full pipeline: clean, build, test, and deploy
+# Optimized with parallel builds and tests for faster execution
 deploy-full:
 	@echo "=========================================="
 	@echo "🚀 Full Pipeline: Clean, Build, Test & Deploy"
@@ -146,19 +147,28 @@ deploy-full:
 	@echo "🧹 Step 1/5: Cleaning..."
 	@$(MAKE) clean
 	@echo ""
-	@echo "📦 Step 2/5: Building client..."
-	@cd client && npm run build
+	@echo "📦 Step 2/5: Building client and server in parallel..."
+	@(cd client && npm run build) & \
+	(cd server && ./gradlew clean build) & \
+	wait || exit 1
 	@echo ""
-	@echo "🏗️  Step 3/5: Building server..."
-	@cd server && ./gradlew clean build
-	@echo ""
-	@echo "🧪 Step 4/5: Running tests..."
+	@echo "🧪 Step 3/5: Running tests in parallel..."
 	@echo "  → Client tests..."
-	@cd client && npm test || (echo "⚠️  Client tests failed!" && exit 1)
-	@echo "  → Server tests..."
-	@cd server && ./gradlew test || (echo "⚠️  Server tests failed!" && exit 1)
+	@(cd client && npm test || (echo "⚠️  Client tests failed!" && exit 1)) & \
+	CLIENT_PID=$$!; \
+	echo "  → Server tests..."
+	@(cd server && ./gradlew test || (echo "⚠️  Server tests failed!" && exit 1)) & \
+	SERVER_PID=$$!; \
+	wait $$CLIENT_PID; \
+	CLIENT_EXIT=$$?; \
+	wait $$SERVER_PID; \
+	SERVER_EXIT=$$?; \
+	if [ $$CLIENT_EXIT -ne 0 ] || [ $$SERVER_EXIT -ne 0 ]; then \
+		echo "❌ Tests failed!"; \
+		exit 1; \
+	fi
 	@echo ""
-	@echo "🐳 Step 5/5: Deploying to Docker..."
+	@echo "🐳 Step 4/5: Deploying to Docker..."
 	@docker compose down
 	@docker compose up -d
 	@echo ""
