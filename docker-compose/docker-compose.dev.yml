@@ -1,33 +1,129 @@
-# Development overrides for docker-compose.yml
-# This file extends the base configuration for development
+# Delirium Infrastructure - Development Override
+# File: delerium-infrastructure/docker-compose/docker-compose.dev.yml
+# Version: 1.0.0
+#
+# This file provides development-specific overrides for docker-compose.yml
+# Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
 
 services:
   server:
-    # Expose port for direct access during development
-    ports:
-      - "8081:8080"
-    # Add development environment variables
+    # Build locally instead of using pre-built image
+    build:
+      context: ../../delerium-server
+      dockerfile: Dockerfile
+      # Use buildkit for faster builds
+      cache_from:
+        - ghcr.io/${GITHUB_USERNAME:-delirium}/delerium-server:latest
+    
+    # Don't use pre-built image
+    image: delerium-server:dev
+    
+    container_name: delirium-server-dev
+    
     environment:
-      - DELETION_TOKEN_PEPPER=dev-pepper-change-me
+      # Development-specific environment
       - LOG_LEVEL=DEBUG
-    # Add volume for live code reloading (if needed for future development)
+      - DELETION_TOKEN_PEPPER=${DELETION_TOKEN_PEPPER:-dev-pepper-change-me}
+      
+      # Enable development features
+      - DEV_MODE=true
+      - CORS_ALLOW_ALL=true
+    
     volumes:
-      - ./server/src:/app/src:ro
-    # Enable debug logging
-    command: ["/app/bin/cc.delerium", "--log-level=debug"]
+      # Mount source for hot-reload (if using Ktor's auto-reload)
+      - ../../delerium-server/src:/app/src:ro
+      
+      # Use local data directory for easy access
+      - ../../delerium-server/data:/data
+      
+      # Mount logs locally
+      - ../logs/server:/app/logs
+    
+    ports:
+      # Expose server directly for debugging
+      - "8080:8080"
+    
+    # Faster restart for development
+    restart: "no"
+    
+    # No resource limits in development
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
 
   web:
-    # Expose additional ports for development
-    ports:
-      - "8080:80"
-      - "8082:443"
-    # Add development-specific nginx config
+    container_name: delirium-web-dev
+    
     volumes:
-      - ./client:/usr/share/nginx/html:ro
-      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./reverse-proxy/dev.conf:/etc/nginx/conf.d/dev.conf:ro
-    # Add development environment
-    environment:
-      - NGINX_ENVSUBST_TEMPLATE_DIR=/etc/nginx/templates
-      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+      # Mount local client directory for live updates
+      - ../../delerium-client:/usr/share/nginx/html:ro
+      
+      # Use development nginx config (less caching)
+      - ../nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+      
+      # Mount logs locally
+      - ../logs/nginx:/var/log/nginx
+    
+    ports:
+      # Keep standard development port
+      - "8080:80"
+    
+    restart: "no"
+    
+    # Add labels for easier management
+    labels:
+      com.delirium.environment: "development"
+
+  # Client watcher service for TypeScript compilation
+  client-watcher:
+    image: node:20-alpine
+    container_name: delirium-client-watcher
+    working_dir: /app
+    
+    volumes:
+      - ../../delerium-client:/app
+    
+    command: npm run watch
+    
+    profiles:
+      - dev
+      - watch
+    
+    restart: "no"
+    
+    networks:
+      - delirium-network
+    
+    labels:
+      com.delirium.environment: "development"
+      com.delirium.service: "build-watcher"
+
+# Development-specific network configuration
+networks:
+  delirium-network:
+    # Use default bridge driver with standard settings
+
+# Usage:
+#
+# 1. Start development environment:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# 2. Start with TypeScript watcher:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile watch up
+#
+# 3. Rebuild after dependency changes:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+#
+# 4. View logs with color:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f --tail=100
+#
+# 5. Execute commands in running containers:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec server bash
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web sh
+#
+# 6. Stop development environment:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml down

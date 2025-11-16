@@ -1,23 +1,197 @@
+# Delirium Infrastructure - Base Docker Compose Configuration
+# File: delerium-infrastructure/docker-compose/docker-compose.yml
+# Version: 1.0.0
+#
+# This is the base configuration for deploying Delirium with pre-built images.
+# For development, use docker-compose.dev.yml as an override.
+# For production, use docker-compose.prod.yml with SSL configuration.
+
+version: '3.8'
+
 services:
+  # Ktor Backend Server
   server:
-    build:
-      context: ./server
+    # Use pre-built image from GitHub Container Registry
+    image: ghcr.io/${GITHUB_USERNAME:-delirium}/delerium-server:${SERVER_VERSION:-latest}
+    
+    # For local builds during development, comment above and uncomment below:
+    # build:
+    #   context: ../../delerium-server
+    #   dockerfile: Dockerfile
+    
+    container_name: delirium-server
+    hostname: server
+    
     environment:
-      - DELETION_TOKEN_PEPPER=${DELETION_TOKEN_PEPPER:-change-me}
+      # Required: Secret pepper for hashing deletion tokens
+      - DELETION_TOKEN_PEPPER=${DELETION_TOKEN_PEPPER:-change-me-in-production}
+      
+      # Optional: Logging configuration
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Optional: Server configuration
+      - SERVER_PORT=8080
+      - DATA_DIR=/data
+    
     volumes:
+      # Persistent storage for SQLite database
       - server-data:/data
+      
+      # Optional: Mount logs directory
+      - ${LOGS_DIR:-../logs}:/app/logs
+    
     expose:
+      # Internal port, not exposed to host
       - "8080"
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    restart: unless-stopped
+    
+    networks:
+      - delirium-network
+    
+    # Security: Run as non-root user
+    user: "1000:1000"
+    
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Nginx Web Server & Reverse Proxy
   web:
     image: nginx:1.27-alpine
+    container_name: delirium-web
+    hostname: web
+    
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    
     ports:
-      - "8080:80"
+      # Development: Expose on port 8080
+      - "${WEB_PORT:-8080}:80"
+    
     volumes:
-      - ./client:/usr/share/nginx/html:ro
-      - ./reverse-proxy/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./reverse-proxy/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Client static files
+      # Option 1: Pre-built client from GitHub Pages or artifact
+      - ${CLIENT_DIST:-./client-dist}:/usr/share/nginx/html:ro
+      
+      # Option 2: For development, mount local client directory
+      # - ../../delerium-client:/usr/share/nginx/html:ro
+      
+      # Nginx configuration
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      
+      # Optional: Custom error pages
+      # - ../nginx/error-pages:/usr/share/nginx/error-pages:ro
+      
+      # Optional: Logs
+      - ${LOGS_DIR:-../logs}/nginx:/var/log/nginx
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    restart: unless-stopped
+    
+    networks:
+      - delirium-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.25'
+          memory: 64M
+
+  # Optional: Client Builder Service (for local development)
+  # This service builds the client and copies it to a shared volume
+  client-builder:
+    image: node:20-alpine
+    container_name: delirium-client-builder
+    working_dir: /app
+    
+    volumes:
+      - ../../delerium-client:/app:ro
+      - client-dist:/dist
+    
+    command: >
+      sh -c "
+        echo 'Building client...';
+        npm ci --prefer-offline;
+        npm run build;
+        echo 'Copying build artifacts...';
+        cp -r /app/js /app/*.html /app/css /dist/;
+        echo 'Client build complete!';
+      "
+    
+    profiles:
+      # Only run this service when explicitly requested
+      - build
+      - dev
+    
+    networks:
+      - delirium-network
+
 volumes:
+  # Persistent database storage
   server-data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-../data}/server
+  
+  # Shared volume for client build artifacts
+  client-dist:
+    driver: local
+
+networks:
+  delirium-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# Usage Examples:
+#
+# 1. Start with pre-built images:
+#    docker compose up -d
+#
+# 2. Start with local development:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# 3. Build client locally:
+#    docker compose --profile build up client-builder
+#    docker compose up -d
+#
+# 4. Start production with SSL:
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# 5. View logs:
+#    docker compose logs -f
+#
+# 6. Stop services:
+#    docker compose down
+#
+# 7. Stop and remove volumes:
+#    docker compose down -v
