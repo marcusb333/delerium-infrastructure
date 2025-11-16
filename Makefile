@@ -38,14 +38,14 @@ setup:
 # Start everything
 start: build-client
 	@echo "🚀 Starting Delirium stack..."
-	docker compose up -d
+	cd docker-compose && docker compose up -d
 	@echo "✅ Services started! Access at http://localhost:8080"
 	@echo "📊 Check status: make logs"
 
 # Stop all containers
 stop:
 	@echo "🛑 Stopping Delirium stack..."
-	docker compose down
+	cd docker-compose && docker compose down
 	@echo "✅ Services stopped"
 
 # Restart services
@@ -54,7 +54,7 @@ restart: stop start
 # Follow logs
 logs:
 	@echo "📋 Following logs (Ctrl+C to exit)..."
-	docker compose logs -f
+	cd docker-compose && docker compose logs -f
 
 # Development mode with hot-reload
 dev:
@@ -68,20 +68,20 @@ dev:
 # Clean up everything
 clean:
 	@echo "🧹 Cleaning up Delirium stack..."
-	docker compose down -v
+	cd docker-compose && docker compose down -v
 	docker system prune -f
 	@echo "✅ Cleanup complete"
 
 # Run all tests
 test:
 	@echo "🧪 Running test suite..."
-	cd client && npm test
+	cd delerium-client && npm test
 	@echo "✅ Tests completed"
 
 # Build TypeScript client
 build-client:
 	@echo "📦 Building TypeScript client..."
-	cd client && npm run build
+	cd delerium-client && npm run build
 	@echo "✅ Client built"
 
 # Health check
@@ -111,7 +111,7 @@ security-setup:
 # Start with security enhancements
 start-secure: security-setup
 	@echo "🛡️  Starting with security enhancements..."
-	docker compose -f docker-compose.yml -f docker-compose.secure.yml up -d
+	cd docker-compose && docker compose -f docker-compose.yml -f docker-compose.secure.yml up -d
 
 # Security check
 security-check:
@@ -148,16 +148,16 @@ deploy-full:
 	@$(MAKE) clean
 	@echo ""
 	@echo "📦 Step 2/5: Building client and server in parallel..."
-	@(cd client && npm run build) & \
-	(cd server && ./gradlew clean build) & \
+	@(cd delerium-client && npm run build) & \
+	(cd delerium-server && ./gradlew clean build) & \
 	wait || exit 1
 	@echo ""
 	@echo "🧪 Step 3/5: Running tests in parallel..."
 	@echo "  → Client tests..."
-	@(cd client && npm test || (echo "⚠️  Client tests failed!" && exit 1)) & \
+	@(cd delerium-client && npm test || (echo "⚠️  Client tests failed!" && exit 1)) & \
 	CLIENT_PID=$$!; \
 	echo "  → Server tests..."
-	@(cd server && ./gradlew test || (echo "⚠️  Server tests failed!" && exit 1)) & \
+	@(cd delerium-server && ./gradlew test || (echo "⚠️  Server tests failed!" && exit 1)) & \
 	SERVER_PID=$$!; \
 	wait $$CLIENT_PID; \
 	CLIENT_EXIT=$$?; \
@@ -169,8 +169,8 @@ deploy-full:
 	fi
 	@echo ""
 	@echo "🐳 Step 4/5: Deploying to Docker..."
-	@docker compose down
-	@docker compose up -d
+	@cd docker-compose && docker compose down
+	@cd docker-compose && docker compose up -d
 	@echo ""
 	@echo "=========================================="
 	@echo "✅ Full pipeline completed successfully!"

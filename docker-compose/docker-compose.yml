@@ -13,7 +13,7 @@ services:
   server:
     # Build locally since images haven't been published yet
     build:
-      context: ../../delerium-server
+      context: ../delerium-server
       dockerfile: Dockerfile
     
     # Once images are published, you can use:
@@ -87,7 +87,7 @@ services:
     volumes:
       # Client static files
       # Mount local client directory for now (until we have pre-built images)
-      - ../../delerium-client:/usr/share/nginx/html:ro
+      - ../delerium-client:/usr/share/nginx/html:ro
       
       # Once using pre-built artifacts, use:
       # - ${CLIENT_DIST:-./client-dist}:/usr/share/nginx/html:ro
@@ -132,7 +132,7 @@ services:
     working_dir: /app
     
     volumes:
-      - ../../delerium-client:/app:ro
+      - ../delerium-client:/app:ro
       - client-dist:/dist
     
     command: >

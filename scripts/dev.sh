@@ -19,9 +19,9 @@ if ! command -v node > /dev/null 2>&1; then
 fi
 
 # Install client dependencies if needed
-if [ ! -d "client/node_modules" ]; then
+if [ ! -d "delerium-client/node_modules" ]; then
     echo "📦 Installing client dependencies..."
-    cd client
+    cd delerium-client
     npm install
     cd ..
 fi
@@ -60,7 +60,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Start TypeScript in watch mode
-cd client
+cd delerium-client
 npm run watch &
 WATCH_PID=$!
 

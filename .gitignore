@@ -1,0 +1,39 @@
+# Environment variables
+.env
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE configuration
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Runtime data
+data/
+logs/
+
+# Submodules / separate repos
+delerium-client/
+delerium-server/
+
+# Build artifacts
+*.log
+node_modules/
+dist/
+build/
+
+# Docker volumes
+volumes/
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
