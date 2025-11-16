@@ -16,8 +16,9 @@ services:
       context: ../../delerium-server
       dockerfile: Dockerfile
     
-    # Once images are published to GHCR, you can use:
-    # image: ghcr.io/${GITHUB_USERNAME:-SnarkyB}/delerium-server:${SERVER_VERSION:-latest}
+    # Once images are published, you can use:
+    # For GHCR: ghcr.io/${GITHUB_USERNAME:-SnarkyB}/delerium-server:${SERVER_VERSION:-latest}
+    # For Docker Hub: ${DOCKER_USERNAME:-marcusb333}/delerium-server:${SERVER_VERSION:-latest}
     
     container_name: delirium-server
     hostname: server
@@ -85,11 +86,11 @@ services:
     
     volumes:
       # Client static files
-      # Option 1: Pre-built client from GitHub Pages or artifact
-      - ${CLIENT_DIST:-./client-dist}:/usr/share/nginx/html:ro
+      # Mount local client directory for now (until we have pre-built images)
+      - ../../delerium-client:/usr/share/nginx/html:ro
       
-      # Option 2: For development, mount local client directory
-      # - ../../delerium-client:/usr/share/nginx/html:ro
+      # Once using pre-built artifacts, use:
+      # - ${CLIENT_DIST:-./client-dist}:/usr/share/nginx/html:ro
       
       # Nginx configuration
       - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
