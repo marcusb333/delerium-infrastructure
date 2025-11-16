@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 set -e
 
 # VPS Deployment Script for Delirium
@@ -8,7 +8,8 @@ set -e
 DOMAIN=${1:-}
 EMAIL=${2:-}
 GIT_USERNAME=${3:-}
-REPO_URL="https://github.com/$GIT_USERNAME/delerium-paste.git"
+DOCKER_USERNAME=${4:-}
+REPO_URL="https://github.com/$GIT_USERNAME/delerium-infrastructure.git"
 INSTALL_DIR="$HOME/delirium"
 
 # Colors for output
@@ -54,6 +55,13 @@ if [ -z "$GIT_USERNAME" ]; then
     echo_error "Username is required for git clone"
     echo "Usage: $0 YOUR_DOMAIN YOUR_EMAIL GIT_USERNAME"
     echo "Example: $0 example.com admin@example.com GIT_USERNAME"
+    exit 1
+fi
+
+if [ -z "$DOCKER_USERNAME" ]; then
+    echo_error "Username is required for DOCKER"
+    echo "Usage: $0 YOUR_DOMAIN YOUR_EMAIL GIT_USERNAME DOCKER_USERNAME"
+    echo "Example: $0 example.com admin@example.com gitname dockername"
     exit 1
 fi
 
@@ -114,7 +122,7 @@ fi
 if [ -d "$INSTALL_DIR" ]; then
     echo_info "Repository already exists, pulling latest changes..."
     cd "$INSTALL_DIR"
-    git pull origin main || git pull origin master || true
+    git pull origin main || true
 else
     echo_info "Cloning repository..."
     git clone "$REPO_URL" "$INSTALL_DIR"
