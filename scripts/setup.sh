@@ -23,8 +23,8 @@ BOLD='\033[1m'
 # =============================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-CLIENT_REPO="https://github.com/${GITHUB_USERNAME:-delirium}/delerium-client.git"
-SERVER_REPO="https://github.com/${GITHUB_USERNAME:-delirium}/delerium-server.git"
+CLIENT_REPO="https://github.com/${GITHUB_USERNAME}/delerium-client.git"
+SERVER_REPO="https://github.com/${GITHUB_USERNAME}/delerium-server.git"
 
 # =============================================================================
 # Helper Functions
