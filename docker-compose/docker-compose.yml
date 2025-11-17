@@ -6,7 +6,7 @@
 # For development, use docker-compose.dev.yml as an override.
 # For production, use docker-compose.prod.yml with SSL configuration.
 
-version: '3.8'
+version: '1.0.0'
 
 services:
   # Ktor Backend Server
@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     
     # Once images are published, you can use:
-    # For GHCR: ghcr.io/${GITHUB_USERNAME:-SnarkyB}/delerium-server:${SERVER_VERSION:-latest}
+    # For GHCR: ghcr.io/${GITHUB_USERNAME:-marcusb333}/delerium-server:${SERVER_VERSION:-latest}
     # For Docker Hub: ${DOCKER_USERNAME:-marcusb333}/delerium-server:${SERVER_VERSION:-latest}
     
     container_name: delirium-server

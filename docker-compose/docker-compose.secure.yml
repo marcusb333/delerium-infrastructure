@@ -1,4 +1,5 @@
 # Security-hardened docker-compose override
+version: '1.0.0'
 services:
   server:
     # Security: Run as non-root user

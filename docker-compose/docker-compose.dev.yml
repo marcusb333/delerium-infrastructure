@@ -5,7 +5,7 @@
 # This file provides development-specific overrides for docker-compose.yml
 # Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
-version: '3.8'
+version: '1.0.0'
 
 services:
   server:
@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
       # Use buildkit for faster builds
       cache_from:
-        - ghcr.io/${GITHUB_USERNAME:-delirium}/delerium-server:latest
+        - ghcr.io/${GITHUB_USERNAME:-marcusb333}/delerium-server:latest
     
     # Don't use pre-built image
     image: delerium-server:dev

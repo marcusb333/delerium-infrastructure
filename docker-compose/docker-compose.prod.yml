@@ -5,12 +5,12 @@
 # This file provides production-specific overrides for docker-compose.yml
 # Use: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 
-version: '3.8'
+version: '1.0.0'
 
 services:
   server:
     # Use tagged release, not latest
-    image: ghcr.io/${GITHUB_USERNAME:-delirium}/delerium-server:${SERVER_VERSION:-v1.0.0}
+    image: ghcr.io/${GITHUB_USERNAME:-marcusb333}/delerium-server:${SERVER_VERSION:-v1.0.0}
     
     container_name: delirium-server-prod
     
