@@ -13,13 +13,8 @@ services:
   server:
     # Build locally since images haven't been published yet
     build:
-      context: ../delerium-server
+      context: ${SERVER_PATH:-../../delerium-server}
       dockerfile: Dockerfile
-      # Multi-architecture build support
-      platforms:
-        - linux/amd64
-        - linux/arm64
-        - linux/arm/v7
     
     # Once images are published, you can use:
     # For GHCR: ghcr.io/${GITHUB_USERNAME:-marcusb333}/delerium-server:${SERVER_VERSION:-latest}
@@ -68,9 +63,6 @@ services:
     networks:
       - delirium-network
     
-    # Security: Run as non-root user
-    user: "1000:1000"
-    
     # Resource limits (adjust based on your needs)
     deploy:
       resources:
@@ -98,7 +90,7 @@ services:
     volumes:
       # Client static files
       # Mount local client directory for now (until we have pre-built images)
-      - ../delerium-client:/usr/share/nginx/html:ro
+      - ${CLIENT_PATH:-../../delerium-client}:/usr/share/nginx/html:ro
       
       # Once using pre-built artifacts, use:
       # - ${CLIENT_DIST:-./client-dist}:/usr/share/nginx/html:ro
@@ -168,10 +160,6 @@ volumes:
   # Persistent database storage
   server-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-../data}/server
   
   # Shared volume for client build artifacts
   client-dist:

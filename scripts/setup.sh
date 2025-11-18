@@ -311,6 +311,76 @@ clone_repository() {
 }
 
 # =============================================================================
+# Client Build
+# =============================================================================
+
+build_client() {
+    print_step "Building client application..."
+    
+    local client_dir="$ROOT_DIR/../delerium-client"
+    
+    # Check if client directory exists
+    if [ ! -d "$client_dir" ]; then
+        print_warning "Client directory not found at $client_dir"
+        print_info "Skipping client build (will use pre-built images if available)"
+        return 0
+    fi
+    
+    # Check if Node.js is installed
+    if ! command -v npm &> /dev/null; then
+        print_warning "npm not found, skipping client build"
+        print_info "Install Node.js from: https://nodejs.org/"
+        print_info "Or the client will be served from the repository directly"
+        return 0
+    fi
+    
+    print_info "Node.js found: $(node --version 2>/dev/null || echo 'unknown')"
+    
+    # Change to client directory
+    if ! cd "$client_dir" 2>/dev/null; then
+        print_error "Failed to change to client directory: $client_dir"
+        return 1
+    fi
+    
+    # Check if package.json exists
+    if [ ! -f "package.json" ]; then
+        print_warning "package.json not found in client directory"
+        cd "$ROOT_DIR" 2>/dev/null || true
+        return 0
+    fi
+    
+    # Install dependencies
+    print_info "Installing client dependencies..."
+    if npm install --no-audit --no-fund 2>&1 | grep -v "^npm WARN" | grep -v "^$" || true; then
+        print_success "Dependencies installed"
+    else
+        print_warning "Some dependencies may have failed to install"
+    fi
+    
+    # Build TypeScript to JavaScript
+    print_info "Building TypeScript to JavaScript..."
+    if npm run build 2>&1; then
+        print_success "Client built successfully"
+        
+        # Verify js directory was created
+        if [ -d "js" ]; then
+            print_success "JavaScript files generated in js/ directory"
+        else
+            print_warning "js/ directory not found after build"
+        fi
+    else
+        print_error "Client build failed"
+        cd "$ROOT_DIR" 2>/dev/null || true
+        return 1
+    fi
+    
+    # Return to root directory
+    cd "$ROOT_DIR" 2>/dev/null || true
+    echo ""
+    return 0
+}
+
+# =============================================================================
 # Port Conflict Detection
 # =============================================================================
 
@@ -701,6 +771,9 @@ main() {
     
     # Repository check is non-fatal
     check_repositories || print_warning "Repository check had issues, continuing..."
+    
+    # Build client (non-fatal, will skip if not available)
+    build_client || print_warning "Client build had issues, continuing with unbuild source..."
     
     if ! setup_docker; then
         print_error "Docker setup failed"

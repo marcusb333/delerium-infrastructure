@@ -179,10 +179,14 @@ sed -i "s/YOUR_DOMAIN_HERE/$DOMAIN/g" reverse-proxy/nginx.conf
 
 # Step 13: Build client
 echo_info "Building frontend client..."
-cd client
-npm ci
-npm run build
-cd ..
+if [ -d "$INSTALL_DIR/../delerium-client" ]; then
+    cd "$INSTALL_DIR/../delerium-client"
+    npm ci
+    npm run build
+    cd "$INSTALL_DIR"
+else
+    echo_warn "Client directory not found, skipping build"
+fi
 
 # Step 14: Build and start containers
 echo_info "Building and starting Docker containers..."
