@@ -43,6 +43,8 @@ jobs:
     name: Full Stack Integration
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      max-parallel: 1
       matrix:
         config:
           - name: "Development"
@@ -78,6 +80,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: delerium-client/package-lock.json
 
+      - name: Clean up any existing containers
+        run: |
+          # Stop and remove any existing delirium containers to avoid port conflicts
+          docker ps -a | grep delirium | awk '{print $1}' | xargs -r docker rm -f || true
+          docker network prune -f || true
+      
       - name: Setup environment
         working-directory: infrastructure
         run: |
