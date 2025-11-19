@@ -1,0 +1,2 @@
+NAME                  IMAGE                 COMMAND                  SERVICE   CREATED         STATUS                   PORTS
+delirium-server-dev   delerium-server:dev   "/app/bin/delerium-s…"   server    6 seconds ago   Up 5 seconds (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
