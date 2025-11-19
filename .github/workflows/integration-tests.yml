@@ -85,9 +85,14 @@ jobs:
           cp docker-compose/.env.example .env
           
           # Generate secure pepper
-          echo "DELETION_TOKEN_PEPPER=$(openssl rand -hex 32)" >> .env
+          PEPPER=$(openssl rand -hex 32)
+          echo "DELETION_TOKEN_PEPPER=${PEPPER}" >> .env
           echo "GITHUB_USERNAME=${{ github.repository_owner }}" >> .env
           echo "CLIENT_DIST=../../delerium-client" >> .env
+          
+          # Export for docker compose
+          echo "DELETION_TOKEN_PEPPER=${PEPPER}" >> $GITHUB_ENV
+          echo "GITHUB_USERNAME=${{ github.repository_owner }}" >> $GITHUB_ENV
           
           # Create directories
           mkdir -p data logs
@@ -240,8 +245,13 @@ jobs:
         working-directory: infrastructure
         run: |
           cp docker-compose/.env.example .env
-          echo "DELETION_TOKEN_PEPPER=$(openssl rand -hex 32)" >> .env
+          PEPPER=$(openssl rand -hex 32)
+          echo "DELETION_TOKEN_PEPPER=${PEPPER}" >> .env
           echo "CLIENT_DIST=../../delerium-client" >> .env
+          
+          # Export for docker compose
+          export DELETION_TOKEN_PEPPER="${PEPPER}"
+          export CLIENT_DIST="../../delerium-client"
           
           docker compose -f docker-compose/docker-compose.yml up -d --build
           

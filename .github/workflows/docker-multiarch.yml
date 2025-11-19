@@ -108,11 +108,12 @@ jobs:
           echo "Platforms: ${PLATFORMS}"
 
       - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
         uses: docker/login-action@v3.3.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+        continue-on-error: true
 
       - name: Login to GitHub Container Registry
         if: github.event_name != 'pull_request'
@@ -123,7 +124,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push to Docker Hub
-        if: github.event_name != 'pull_request' && (github.event.inputs.push_to_registry != 'false')
+        if: github.event_name != 'pull_request' && (github.event.inputs.push_to_registry != 'false') && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
         uses: docker/build-push-action@v6.9.0
         with:
           context: ./delerium-server
@@ -145,6 +146,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+        continue-on-error: true
 
       - name: Build and push to GHCR
         if: github.event_name != 'pull_request' && (github.event.inputs.push_to_registry != 'false')
@@ -171,13 +173,14 @@ jobs:
             BUILDKIT_INLINE_CACHE=1
 
       - name: Build only (no push)
-        if: github.event_name == 'pull_request' || github.event.inputs.push_to_registry == 'false'
+        if: github.event_name == 'pull_request' || github.event.inputs.push_to_registry == 'false' || secrets.DOCKERHUB_USERNAME == '' || secrets.DOCKERHUB_TOKEN == ''
         uses: docker/build-push-action@v6.9.0
         with:
           context: ./delerium-server
           file: ./delerium-server/Dockerfile
-          platforms: ${{ steps.meta.outputs.platforms }}
+          platforms: linux/amd64
           push: false
+          load: true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           cache-from: type=gha
