@@ -239,7 +239,6 @@ For production builds, you can:
 
 - [Setup Guide](SETUP_GUIDE.md) - Complete setup instructions
 - [Deployment Guide](DEPLOYMENT.md) - Production deployment
-- [Button Fix Documentation](BUTTON_FIX.md) - Original issue resolution
 
 ---
 Last updated: 2025-11-18
