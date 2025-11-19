@@ -139,7 +139,7 @@ jobs:
           elapsed=0
           
           while [ $elapsed -lt $timeout ]; do
-            if curl -f http://localhost:${{ matrix.config.port }}/api/health 2>/dev/null; then
+            if curl -f http://localhost:${{ matrix.config.port }}/api/pow 2>/dev/null; then
               echo "✅ Services are healthy!"
               exit 0
             fi
@@ -280,7 +280,7 @@ jobs:
           docker compose -f docker-compose/docker-compose.yml up -d --build
           
           # Wait for services
-          timeout 60 bash -c 'until curl -f http://localhost:8080/api/health; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:8080/api/pow; do sleep 2; done'
 
       - name: Install k6 (load testing tool)
         run: |
