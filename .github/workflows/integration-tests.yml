@@ -131,6 +131,7 @@ jobs:
           $COMPOSE_CMD up -d --build
 
       - name: Wait for services to be healthy
+        working-directory: infrastructure
         run: |
           echo "Waiting for services to start..."
           
@@ -150,7 +151,13 @@ jobs:
           done
           
           echo "❌ Services failed to start within $timeout seconds"
-          docker compose -f infrastructure/docker-compose/docker-compose.yml logs
+          # Construct the same compose command used to start services
+          IFS=':' read -ra FILES <<< "${{ matrix.config.compose_file }}"
+          COMPOSE_CMD="docker compose"
+          for file in "${FILES[@]}"; do
+            COMPOSE_CMD="$COMPOSE_CMD -f docker-compose/$file"
+          done
+          $COMPOSE_CMD logs
           exit 1
 
       - name: Run smoke tests
