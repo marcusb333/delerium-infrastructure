@@ -5,6 +5,19 @@ All notable changes to the Delirium Infrastructure project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1-alpha] - 2025-11-20
+
+### Server Release
+- **Docker Image Release**: v1.0.1-alpha release of delerium-server Docker image
+- Multi-architecture support (AMD64, ARM64, ARMv7)
+- JDK 21 runtime
+- Automated build and publish workflow enabled
+
+### Notes
+- This is an alpha release for the server component
+- Images available on both Docker Hub and GitHub Container Registry
+- Supports all architectures: linux/amd64, linux/arm64, linux/arm/v7
+
 ## [2.0.0] - 2025-11-18
 
 ### Added
